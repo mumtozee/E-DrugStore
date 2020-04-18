@@ -100,7 +100,7 @@ def hack(input_string, stat_file):
     with open(stat_file, 'r') as file:
         default_freq = json.load(file)
         min_key, min_value = 1, 15000000
-        for i in range(1, 26):
+        for i in range(1, 27):
             temp_stat = stat_counter(caesarize(input_string, i))
             delta_stat = count_difference(default_freq, temp_stat)
             if delta_stat < min_value:
