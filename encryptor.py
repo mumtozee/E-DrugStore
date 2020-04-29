@@ -26,19 +26,19 @@ def caesarize(input_string, key=0):
 def encode(arguments):
     output_data = ''
     if arguments.input_file:
-        with open(args.input_file, 'r') as in_file:
+        with open(arguments.input_file, 'r') as in_file:
             input_data = in_file.read()
         in_file.close()
     else:
         input_data = sys.stdin.read()
 
-    if args.cipher == 'caesar':
-        output_data = caesarize(input_data, int(args.key))
-    elif args.cipher == 'vigenere':
-        output_data = vigenerize(input_data, args.key, 'encrypt')
+    if arguments.cipher == 'caesar':
+        output_data = caesarize(input_data, int(arguments.key))
+    elif arguments.cipher == 'vigenere':
+        output_data = vigenerize(input_data, arguments.key, 'encrypt')
 
-    if args.output_file:
-        with open(args.output_file, 'w') as out_file:
+    if arguments.output_file:
+        with open(arguments.output_file, 'w') as out_file:
             out_file.write(output_data)
         out_file.close()
     else:
@@ -48,19 +48,19 @@ def encode(arguments):
 def decode(arguments):
     output_data = ''
     if arguments.input_file:
-        with open(args.input_file, 'r') as in_file:
+        with open(arguments.input_file, 'r') as in_file:
             input_data = in_file.read()
         in_file.close()
     else:
         input_data = sys.stdin.read()
 
-    if args.cipher == 'caesar':
-        output_data = caesarize(input_data, -1 * int(args.key))
-    elif args.cipher == 'vigenere':
-        output_data = vigenerize(input_data, args.key, 'decrypt')
+    if arguments.cipher == 'caesar':
+        output_data = caesarize(input_data, -1 * int(arguments.key))
+    elif arguments.cipher == 'vigenere':
+        output_data = vigenerize(input_data, arguments.key, 'decrypt')
 
-    if args.output_file:
-        with open(args.output_file, 'w') as out_file:
+    if arguments.output_file:
+        with open(arguments.output_file, 'w') as out_file:
             out_file.write(output_data)
         out_file.close()
     else:
