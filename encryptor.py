@@ -1,56 +1,97 @@
 import sys
 import argparse
 import json
-
-parser = argparse.ArgumentParser()
-parser.add_argument("action", type=str, help="encode, decode, train or hack")
-parser.add_argument("--cipher", help="set the cipher type")
-parser.add_argument("--key")
-parser.add_argument("--input-file")
-parser.add_argument("--text-file")
-parser.add_argument("--output-file")
-parser.add_argument("--model-file")
-args = parser.parse_args()
+from string import ascii_uppercase, ascii_lowercase
 
 
 def caesarize(input_string, key=0):
+    mod = len(ascii_lowercase)
     output_string = ''
-    for i in range(len(input_string)):
-        tmp_ord = ord(input_string[i])
-        if input_string[i].isupper():
-            output_string += chr((tmp_ord + key - 65) % 26 + 65)
-        elif input_string[i].islower():
-            output_string += chr((tmp_ord + key - 97) % 26 + 97)
+    for letter in input_string:
+        tmp_ord = 0
+        letter_to_add = ''
+        if letter.isupper():
+            tmp_ord = ascii_uppercase.index(letter)
+            letter_to_add = ascii_uppercase[(tmp_ord + key) % mod]
+        elif letter.islower():
+            tmp_ord = ascii_lowercase.index(letter)
+            letter_to_add = ascii_lowercase[(tmp_ord + key) % mod]
         else:
-            output_string += input_string[i]
+            letter_to_add = letter
+
+        output_string += letter_to_add
     return output_string
+
+
+def encode(arguments):
+    output_data = ''
+    if arguments.input_file:
+        with open(args.input_file, 'r') as in_file:
+            input_data = in_file.read()
+        in_file.close()
+    else:
+        input_data = sys.stdin.read()
+
+    if args.cipher == 'caesar':
+        output_data = caesarize(input_data, int(args.key))
+    elif args.cipher == 'vigenere':
+        output_data = vigenerize(input_data, args.key, 'encrypt')
+
+    if args.output_file:
+        with open(args.output_file, 'w') as out_file:
+            out_file.write(output_data)
+        out_file.close()
+    else:
+        print(output_data)
+
+
+def decode(arguments):
+    output_data = ''
+    if arguments.input_file:
+        with open(args.input_file, 'r') as in_file:
+            input_data = in_file.read()
+        in_file.close()
+    else:
+        input_data = sys.stdin.read()
+
+    if args.cipher == 'caesar':
+        output_data = caesarize(input_data, -1 * int(args.key))
+    elif args.cipher == 'vigenere':
+        output_data = vigenerize(input_data, args.key, 'decrypt')
+
+    if args.output_file:
+        with open(args.output_file, 'w') as out_file:
+            out_file.write(output_data)
+        out_file.close()
+    else:
+        print(output_data)
 
 
 def vigenerize(input_string, keyword='', mode='encrypt'):
     output_string = ''
     key = keyword.upper()
     key_index = 0
+    mod = len(ascii_lowercase)
+
+    base = 1
+    if mode == 'decrypt':
+        base = -1
+
     for char in input_string:
         if char.isupper():
-            key_order = ord(key[key_index]) - 65
-            char_order = ord(char) - 65
-            if mode == 'encrypt':
-                output_string += chr((char_order + key_order) % 26 + 65)
-            else:
-                output_string += chr((char_order - key_order) % 26 + 65)
-
+            key_order = ascii_uppercase.index(key[key_index])
+            char_order = ascii_uppercase.index(char)
+            letter_to_add = ascii_uppercase[(char_order + base * key_order) % mod]
             key_index += 1
         elif char.islower():
-            key_order = ord(key[key_index].lower()) - 97
-            char_order = ord(char) - 97
-            if mode == 'encrypt':
-                output_string += chr((char_order + key_order) % 26 + 97)
-            else:
-                output_string += chr((char_order - key_order) % 26 + 97)
-
+            key_order = ascii_lowercase.index(key[key_index].lower())
+            char_order = ascii_lowercase.index(char)
+            letter_to_add = ascii_lowercase[(char_order + base * key_order) % mod]
             key_index += 1
         else:
-            output_string += char
+            letter_to_add = char
+
+        output_string += letter_to_add
 
         if key_index == len(key):
             key_index = 0
@@ -67,12 +108,11 @@ def letter_count(input_string):
 
 
 def stat_counter(input_string):
-    letters = "abcdefghijklmnopqrstuvwxyz"
     num_of_letters = letter_count(input_string)
     result = {}
     buffer = input_string.lower()
 
-    for letter in letters:
+    for letter in ascii_lowercase:
         if letter in buffer:
             result[letter] = round((buffer.count(letter) / num_of_letters) * 100, 2)
         else:
@@ -81,70 +121,89 @@ def stat_counter(input_string):
     return result
 
 
-def train(input_string, output_file):
-    with open(output_file, 'w') as file:
+def train(arguments):
+    if arguments.text_file:
+        with open(arguments.text_file, 'r') as in_file:
+            input_string = in_file.read()
+        in_file.close()
+    else:
+        input_string = sys.stdin.read()
+
+    with open(arguments.model_file, 'w') as file:
         file.write(json.dumps(stat_counter(input_string), indent=2))
     file.close()
 
 
 def count_difference(stat_a, stat_b):
-    letters = "abcdefghijklmnopqrstuvwxyz"
     answer = 0.
-    for char in letters:
+    for char in ascii_lowercase:
         answer += (stat_a[char] - stat_b[char]) ** 2
     return answer
 
 
-def hack(input_string, stat_file):
-    output_string = ''
-    with open(stat_file, 'r') as file:
+def hack(arguments):
+    if arguments.input_file:
+        with open(arguments.input_file, 'r') as in_file:
+            input_string = in_file.read()
+        in_file.close()
+    else:
+        input_string = sys.stdin.read()
+
+    with open(arguments.model_file, 'r') as file:
         default_freq = json.load(file)
-        min_key, min_value = 1, 15000000
+        min_key = 1
+        min_value = 15000000
         for i in range(1, 27):
             temp_stat = stat_counter(caesarize(input_string, i))
             delta_stat = count_difference(default_freq, temp_stat)
             if delta_stat < min_value:
-                min_key, min_value = i, delta_stat
+                min_key = i
+                min_value = delta_stat
 
         output_string = caesarize(input_string, min_key)
 
     file.close()
-    return output_string
+
+    if arguments.output_file:
+        with open(arguments.output_file, 'w') as out_file:
+            out_file.write(output_string)
+        out_file.close()
+    else:
+        print(output_string)
 
 
-input_data = ''
-output_data = ''
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
 
-if args.input_file:
-    with open(args.input_file, 'r') as in_file:
-        input_data = in_file.read()
-    in_file.close()
-elif args.text_file:
-    with open(args.text_file, 'r') as in_file:
-        input_data = in_file.read()
-    in_file.close()
-else:
-    input_data = sys.stdin.read()
+    # encoding command
+    encode_parser = subparsers.add_parser('encode')
+    encode_parser.set_defaults(mode='encode', func=encode)
+    encode_parser.add_argument("--cipher")
+    encode_parser.add_argument("--key")
+    encode_parser.add_argument("--input-file")
+    encode_parser.add_argument("--output-file")
 
-if args.action == 'encode':
-    if args.cipher == 'caesar':
-        output_data = caesarize(input_data, int(args.key))
-    elif args.cipher == 'vigenere':
-        output_data = vigenerize(input_data, args.key, 'encrypt')
-elif args.action == 'decode':
-    if args.cipher == 'caesar':
-        output_data = caesarize(input_data, -1 * int(args.key))
-    elif args.cipher == 'vigenere':
-        output_data = vigenerize(input_data, args.key, 'decrypt')
-elif args.action == 'train':
-    train(input_data, str(args.model_file))
-elif args.action == 'hack':
-    output_data = hack(input_data, str(args.model_file))
+    # decoding command
+    decode_parser = subparsers.add_parser('decode')
+    decode_parser.set_defaults(mode='decode', func=decode)
+    decode_parser.add_argument("--cipher")
+    decode_parser.add_argument("--key")
+    decode_parser.add_argument("--input-file")
+    decode_parser.add_argument("--output-file")
 
-# after the whole process ends
-if args.output_file:
-    with open(args.output_file, 'w') as out_file:
-        out_file.write(output_data)
-    out_file.close()
-else:
-    print(output_data)
+    # training command
+    train_parser = subparsers.add_parser('train')
+    train_parser.set_defaults(mode='train', func=train)
+    train_parser.add_argument('--text-file')
+    train_parser.add_argument('--model-file')
+
+    # hacking command
+    hack_parser = subparsers.add_parser('hack')
+    hack_parser.set_defaults(mode='hack', func=hack)
+    hack_parser.add_argument('--input-file')
+    hack_parser.add_argument('--output-file')
+    hack_parser.add_argument('--model-file')
+
+    args = parser.parse_args()
+    args.func(args)
