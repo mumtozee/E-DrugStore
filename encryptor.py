@@ -4,26 +4,9 @@ import json
 from string import ascii_uppercase, ascii_lowercase
 
 
-def caesarize(input_string, key=0):
-    mod = len(ascii_lowercase)
-    symbol_list = []
-    for letter in input_string:
-        alphabet = ''
-        if letter.isupper():
-            alphabet = ''.join(ascii_uppercase)
-        elif letter.islower():
-            alphabet = ''.join(ascii_lowercase)
-
-        if alphabet != '':
-            tmp_ord = alphabet.index(letter)
-            letter_to_add = alphabet[(tmp_ord + key) % mod]
-        else:
-            letter_to_add = letter
-
-        symbol_list.append(letter_to_add)
-
-    output_string = ''.join(symbol_list)
-    return output_string
+def caesarize(input_text, key, method='encode'):
+    key_word = ascii_lowercase[key % len(ascii_lowercase)]
+    return vigenerize(input_text, key_word, method)
 
 
 def vigenerize(input_string, keyword='', method='encode'):
@@ -40,14 +23,14 @@ def vigenerize(input_string, keyword='', method='encode'):
 
     for char in input_string:
         alphabet = ''
-        if char.isupper():
-            alphabet = ''.join(ascii_uppercase)
-            key_symbol = key[key_index].upper()
-        elif char.islower():
-            alphabet = ''.join(ascii_lowercase)
+        if char in ascii_lowercase:
+            alphabet = ascii_lowercase
             key_symbol = key[key_index].lower()
+        elif char in ascii_uppercase:
+            alphabet = ascii_uppercase
+            key_symbol = key[key_index].upper()
 
-        if alphabet != '':
+        if char in alphabet:
             key_order = alphabet.index(key_symbol)
             char_order = alphabet.index(char)
             letter_to_add = alphabet[(char_order + base * key_order) % mod]
@@ -64,30 +47,38 @@ def vigenerize(input_string, keyword='', method='encode'):
     return output_string
 
 
+def read_data(file_name):
+    if file_name:
+        with open(file_name, 'r') as in_file:
+            return in_file.read()
+    else:
+        return sys.stdin.read()
+
+
+def result_data(arguments, output_data):
+    if arguments.output_file:
+        with open(arguments.output_file, 'w') as out_file:
+            out_file.write(output_data)
+    else:
+        print(output_data)
+
+
 def criptify(arguments, mode='encrypt'):
     output_data = ''
-    if arguments.input_file:
-        with open(arguments.input_file, 'r') as in_file:
-            input_data = in_file.read()
-    else:
-        input_data = sys.stdin.read()
+    input_data = read_data(arguments.input_file)
 
     if arguments.cipher == 'caesar':
         if mode == 'encrypt':
-            output_data = caesarize(input_data, int(arguments.key))
+            output_data = caesarize(input_data, int(arguments.key), 'encode')
         else:
-            output_data = caesarize(input_data, -int(arguments.key))
+            output_data = caesarize(input_data, int(arguments.key), 'decode')
     elif arguments.cipher == 'vigenere':
         if mode == 'encrypt':
             output_data = vigenerize(input_data, arguments.key, 'encode')
         else:
             output_data = vigenerize(input_data, arguments.key, 'decode')
 
-    if arguments.output_file:
-        with open(arguments.output_file, 'w') as out_file:
-            out_file.write(output_data)
-    else:
-        print(output_data)
+    result_data(arguments, output_data)
 
 
 def encode(arguments):
@@ -119,65 +110,41 @@ def stat_counter(input_string):
 
 
 def train(arguments):
-    if arguments.text_file:
-        with open(arguments.text_file, 'r') as in_file:
-            input_string = in_file.read()
-    else:
-        input_string = sys.stdin.read()
+    input_string = read_data(arguments.text_file)
 
     with open(arguments.model_file, 'w') as file:
         file.write(json.dumps(stat_counter(input_string), indent=2))
 
 
-def count_difference(stat_a, stat_b):
+def count_difference(stat_a, stat_b, i):
     answer = 0.
     for char in ascii_lowercase:
-        if char in stat_a and char in stat_b:
-            answer += (stat_a[char] - stat_b[char]) ** 2
-        elif char in stat_a:
-            answer += stat_a[char] ** 2
-        elif char in stat_b:
-            answer += stat_b[char] ** 2
+        shifted_char = caesarize(char, i, 'decode')
+        if char in stat_a and shifted_char in stat_b:
+            answer += (stat_a[char] - stat_b[shifted_char]) ** 2
 
     return answer
 
 
-def shift_dict_keys(old_stat):
-    new_stat = {}
-    for dict_key in old_stat:
-        new_stat[caesarize(dict_key, 1)] = old_stat[dict_key]
-
-    return new_stat
-
-
 def hack(arguments):
-    if arguments.input_file:
-        with open(arguments.input_file, 'r') as in_file:
-            input_string = in_file.read()
-    else:
-        input_string = sys.stdin.read()
+    input_string = read_data(arguments.input_file)
 
     with open(arguments.model_file, 'r') as file:
         default_freq = json.load(file)
-        iteration_time = len(ascii_lowercase) + 1
-        min_key = 1
-        temp_stat = stat_counter(caesarize(input_string, 1))
-        min_value = count_difference(default_freq, temp_stat)
+        iteration_time = len(ascii_lowercase)
+        min_key = 0
+        temp_stat = stat_counter(input_string)
+        min_value = count_difference(default_freq, temp_stat, 0)
 
-        for i in range(2, iteration_time):
-            temp_stat = shift_dict_keys(temp_stat)
-            delta_stat = count_difference(default_freq, temp_stat)
+        for i in range(1, iteration_time):
+            delta_stat = count_difference(default_freq, temp_stat, i)
             if delta_stat < min_value:
                 min_key = i
                 min_value = delta_stat
 
         output_string = caesarize(input_string, min_key)
 
-    if arguments.output_file:
-        with open(arguments.output_file, 'w') as out_file:
-            out_file.write(output_string)
-    else:
-        print(output_string)
+    result_data(arguments, output_string)
 
 
 parser = argparse.ArgumentParser()
