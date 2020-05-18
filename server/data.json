@@ -1,0 +1,27 @@
+{
+  "alcohol": {
+    "type": "liquid",
+    "price": 12,
+    "amount": 190
+  },
+  "levamikol": {
+    "type": "salve",
+    "price": 30,
+    "amount": 2
+  },
+  "aspirin": {
+    "type": "pills",
+    "price": 25,
+    "amount": 49
+  },
+  "analgin": {
+    "type": "pills",
+    "price": 78,
+    "amount": 23
+  },
+  "ritalin": {
+    "type": "pills",
+    "price": 129,
+    "amount": 47
+  }
+}
