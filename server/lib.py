@@ -62,7 +62,7 @@ class DrugStore:
             self.items[drug_.name]["amount"] -= drug_.amount
             self.balance += drug_.amount * drug_.price
         else:
-            raise OverflowError
+            raise ValueError
 
     def update_data(self):
         with open('data.json', 'w') as file:

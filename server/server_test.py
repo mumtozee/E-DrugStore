@@ -74,7 +74,7 @@ class SellDrugsTest(unittest.TestCase):
         self.assertEqual(tmp_balance + 25 * 2, pharm.balance)
         self.assertEqual(tmp_amount - 2, pharm.items[test_drug_4.name]['amount'])
         test_drug_4.amount = 2000
-        with self.assertRaises(OverflowError):
+        with self.assertRaises(ValueError):
             pharm.sell(test_drug_4)
 
 

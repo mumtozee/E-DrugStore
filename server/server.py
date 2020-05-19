@@ -52,7 +52,7 @@ def sell_drugs():
         try:
             drug_store.sell(tmp_drug)
             answer_text = 'ok'
-        except OverflowError:
+        except ValueError:
             answer_text = 'amount overflow'
     else:
         answer_text = 'unknown drug'
@@ -67,7 +67,7 @@ def get_drug_list():
 
 
 def main():
-    app.run("localhost", port=8080, debug=True)
+    app.run("localhost", port=8000, debug=True)
 
 
 if __name__ == "__main__":

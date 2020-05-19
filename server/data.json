@@ -4,7 +4,7 @@
     "price": 12,
     "amount": 190
   },
-  "levamikol": {
+  "zovirax": {
     "type": "salve",
     "price": 30,
     "amount": 2
@@ -17,11 +17,11 @@
   "analgin": {
     "type": "pills",
     "price": 78,
-    "amount": 23
+    "amount": 0
   },
   "ritalin": {
     "type": "pills",
     "price": 129,
-    "amount": 47
+    "amount": 24
   }
 }
