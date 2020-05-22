@@ -58,8 +58,9 @@ class DrugStore:
             raise ValueError
 
     def sell(self, drug_):
-        if self.items[drug_.name]["amount"] >= drug_.amount:
-            self.items[drug_.name]["amount"] -= drug_.amount
+        tmp_item_key = self.items[drug_.name]
+        if tmp_item_key["amount"] >= drug_.amount:
+            tmp_item_key["amount"] -= drug_.amount
             self.balance += drug_.amount * drug_.price
         else:
             raise ValueError

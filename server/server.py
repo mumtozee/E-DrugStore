@@ -1,3 +1,4 @@
+import argparse
 import flask
 import lib
 import json
@@ -6,6 +7,17 @@ app = flask.Flask("Phystech Pharmacy")
 
 local_lab = lib.Laboratory()
 drug_store = lib.DrugStore(local_lab)
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 8000
+
+
+def create_server_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', default=DEFAULT_HOST)
+    parser.add_argument('--port', default=DEFAULT_PORT)
+
+    return parser
 
 
 @app.route('/order_lab', methods=['POST'])
@@ -67,7 +79,10 @@ def get_drug_list():
 
 
 def main():
-    app.run("localhost", port=8000, debug=True)
+    server_parser = create_server_parser()
+    args = server_parser.parse_args()
+
+    app.run(args.host, port=args.port, debug=True)
 
 
 if __name__ == "__main__":

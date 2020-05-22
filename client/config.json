@@ -1,0 +1,34 @@
+{
+  "commands": {
+    "help": "shows list of commands",
+    "ask-drugs": "check if the specific drug is in the drugstore",
+    "buy": "buy specific drug with specific amounts",
+    "exit": "finish session and exit program",
+    "get-status": "get status of the order made in the lab by ID given in the 'order' section",
+    "order": "order a specific drug in the lab in case it doesn't exist in the store",
+    "print-list": "show all drugs and information available in the drug store in table-view"
+  },
+  "text_responses": {
+    "error_message": "Something went wrong. Check your connection or server address and restart.",
+    "ask_drug_name": "Enter the name of the drug, you want: ",
+    "ask_amount": "Enter the amount of drug: ",
+    "ask_ID": "Enter the ID of your order: ",
+    "ask_type": "Enter drug type: ",
+    "ask_card_num": "Enter your card number (XXXX-XXXX-XXXX-XXXX): ",
+    "no_drug_local": "It seems, we don't have this drug currently.\nTry to make an order in our lab. Type help for the command list :)",
+    "say_ID": "ID of your order in out lab is: ",
+    "status_in_process": "Your order is being prepared in the lab!",
+    "status_finished": "Your order is ready. Soon it will be yours :)",
+    "status_overflow": "We don't have this order in lab",
+    "buy_amount_overflow": "Sorry, it seems we don't have that amount of drugs :(",
+    "buy_unknown_drug": "Seems we don't have this drug currently\nTry to order it in our lab. Type 'help' for the list of commands)",
+    "buy_payment_success": "Payment was executed successfully!",
+    "buy_payment_error": "Sorry, something went wrong. Try again",
+    "ask_exit": "Are you sure you want to exit? (y/n) ",
+    "exit_yes": "Good bye! Take care of yourself! ^^",
+    "exit_no": "ok then, let's carry on",
+    "invalid_input": "invalid input, please try again",
+    "our_commands": "We have these commands available: ",
+    "unknown_cmd": "Unknown command. 'help' for list of commands"
+  }
+}

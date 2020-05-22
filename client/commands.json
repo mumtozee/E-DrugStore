@@ -1,9 +1,0 @@
-{
-  "help" : "shows list of commands",
-  "ask-drugs" : "check if the specific drug is in the drugstore",
-  "buy" : "buy specific drug with specific amounts",
-  "exit" : "finish session and exit program",
-  "get-status" : "get status of the order made in the lab by ID given in the 'order' section",
-  "order" : "order a specific drug in the lab in case it doesn't exist in the store",
-  "print-list" : "show all drugs and information available in the drug store in table-view"
-}

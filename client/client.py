@@ -3,9 +3,13 @@ import argparse
 import json
 
 
-def handle_error():
-    print("Something went wrong. Check your connection or server address and restart.")
-    exit_function()
+def address(args):
+    return f'http://{args.host}:{args.port}'
+
+
+def handle_error(response):
+    print(response["error_message"])
+    exit_function(response)
 
 
 def create_main_parser():
@@ -16,88 +20,86 @@ def create_main_parser():
     return parser
 
 
-def ask_drugs(args):
-    drug_name = input("Enter the name of the drug, you want: ")
+def ask_drugs(args, response):
+    drug_name = input(response["ask_drug_name"])
 
     try:
-        result = requests.get(f'http://{args.host}:{args.port}/ask_for', params=dict(
+        result = requests.get(f'{address(args)}/ask_for', params=dict(
             name=drug_name
         )).text
 
         if result == 'no drug in local base':
-            print("It seems, we don't have this drug currently.")
-            print("Try to make an order in our lab. Type help for the command list :)")
+            print(response["no_drug_local"])
         else:
             got_drug_data = dict(json.loads(result))
             print(f"Type: {got_drug_data['type']}")
             print(f"Price: ${got_drug_data['price']}")
             print(f"Amount: {got_drug_data['amount']}")
     except requests.exceptions.ConnectionError:
-        handle_error()
+        handle_error(response)
 
 
-def make_order(args):
-    drug_name = input("Enter the drug name: ")
-    drug_type = input("Enter the drug type: ")
-    drug_amount = input("Enter the amount of drug: ")
+def make_order(args, response):
+    drug_name = input(response["ask_drug_name"])
+    drug_type = input(response["ask_type"])
+    drug_amount = input(response["ask_amount"])
 
     try:
-        order_id = requests.post(f'http://{args.host}:{args.port}/order_lab', params=dict(
+        order_id = requests.post(f'{address(args)}/order_lab', params=dict(
             name=drug_name,
             type=drug_type,
             amount=drug_amount
         )).text
 
-        print(f"ID of your order in out lab is: {order_id}")
+        print(f'{response["say_ID"]}{order_id}')
     except requests.exceptions.ConnectionError:
-        handle_error()
+        handle_error(response)
 
 
-def get_status(args):
-    id_ = input('Enter ID of the order: ')
+def get_status(args, response):
+    id_ = input(response["ask_ID"])
     try:
-        stats = requests.get(f'http://{args.host}:{args.port}/get_order_status', params=dict(
+        stats = requests.get(f'{address(args)}/get_order_status', params=dict(
             id=id_
         )).text
 
         if stats == 'in process':
-            print("Your order is being prepared in the lab!")
+            print(response["status_in_process"])
         elif stats == 'finished':
-            print("Your order is ready. Soon it will be yours :)")
+            print(response["status_finished"])
         elif stats == 'overflow':
-            print("We don't have this order in lab")
+            print(response["status_overflow"])
     except requests.exceptions.ConnectionError:
-        handle_error()
+        handle_error(response)
 
 
-def buy_drugs(args):
-    drug_name = input("Enter drug name: ")
-    drug_amount = input("Enter amount of your purchase: ")
+def buy_drugs(args, response):
+    drug_name = input(response["ask_drug_name"])
+    drug_amount = input(response["ask_amount"])
 
     try:
-        result = requests.post(f'http://{args.host}:{args.port}/sell', params=dict(
+        result = requests.post(f'{address(args)}/sell', params=dict(
             name=drug_name,
             amount=drug_amount
         )).text
 
         if result == 'amount overflow':
-            print("Sorry, it seems we don't have that amount of drugs :(")
+            print(response["buy_amount_overflow"])
         elif result == 'unknown drug':
-            print("Seems we don't have this drug currently")
-            print("Try to order it in our lab. Type 'help' for the list of commands")
+            print(response["buy_unknown_drug"])
         elif result == 'ok':
-            card_num = input("Enter your card number (XXXX-XXXX-XXXX-XXXX): ")
+            card_num = input(response["ask_card_num"])
             if len(card_num) == 19:
-                print("Payment was executed successfully!")
+                print(response["buy_payment_success"])
             else:
-                print("Sorry, something went wrong. Try again")
+                print(response["buy_payment_error"])
     except requests.exceptions.ConnectionError:
-        handle_error()
+        handle_error(response)
 
 
-def print_list(args):
+def print_list(args, response):
     try:
-        items_raw = requests.get(f'http://{args.host}:{args.port}/get_drug_list').text
+        items_raw = requests.get(f'{address(args)}/get_drug_list').text
         items = dict(json.loads(items_raw))
 
         print("Name\t\tType\t\tPrice\t\tAmount")
@@ -107,23 +109,23 @@ def print_list(args):
             price_ = items[name]['price']
             print(f"{name}\t\t{type_}\t\t{price_}\t\t{amount_}")
     except requests.exceptions.ConnectionError:
-        handle_error()
+        handle_error(response)
 
 
-def exit_function():
-    choice = input("Are your sure, you want to exit? (y/n) ")
+def exit_function(response):
+    choice = input(response["ask_exit"])
 
     if choice == 'y':
-        print("Good bye! Take care of yourself! ^^")
+        print(response["exit_yes"])
         exit()
     elif choice == 'n':
-        print('ok then, let\'s carry on')
+        print(response["exit_no"])
     else:
-        print('invalid input, please try again')
+        print(response["invalid_input"])
 
 
-def print_help(commands):
-    print("We have these commands: ")
+def print_help(commands, response):
+    print(response["our_commands"])
 
     for cmd in commands:
         print(f"{cmd} - {commands[cmd]}")
@@ -133,30 +135,31 @@ def main():
     main_parser = create_main_parser()
     program_args = main_parser.parse_args()
 
-    with open('commands.json', 'r') as cmd_file:
-        commands = json.load(cmd_file)
+    with open('config.json', 'r') as conf_file:
+        configs = json.load(conf_file)
+        text_response = configs["text_responses"]
         while True:
             try:
                 command = input('$ ')
 
                 if command == 'ask-drugs':
-                    ask_drugs(program_args)
+                    ask_drugs(program_args, text_response)
                 elif command == 'order':
-                    make_order(program_args)
+                    make_order(program_args, text_response)
                 elif command == 'get-status':
-                    get_status(program_args)
+                    get_status(program_args, text_response)
                 elif command == 'buy':
-                    buy_drugs(program_args)
+                    buy_drugs(program_args, text_response)
                 elif command == 'print-list':
-                    print_list(program_args)
+                    print_list(program_args, text_response)
                 elif command == 'help':
-                    print_help(commands)
+                    print_help(configs["commands"], text_response)
                 elif command == "exit":
-                    exit_function()
+                    exit_function(text_response)
                 else:
-                    print("Unknown command. 'help' for list of commands")
+                    print(text_response["unknown_cmd"])
             except KeyboardInterrupt:
-                exit_function()
+                exit_function(text_response)
 
 
 if __name__ == "__main__":

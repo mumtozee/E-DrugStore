@@ -2,7 +2,7 @@
   "alcohol": {
     "type": "liquid",
     "price": 12,
-    "amount": 190
+    "amount": 0
   },
   "zovirax": {
     "type": "salve",
@@ -12,7 +12,7 @@
   "aspirin": {
     "type": "pills",
     "price": 25,
-    "amount": 49
+    "amount": 34
   },
   "analgin": {
     "type": "pills",
@@ -22,6 +22,6 @@
   "ritalin": {
     "type": "pills",
     "price": 129,
-    "amount": 24
+    "amount": 22
   }
 }
