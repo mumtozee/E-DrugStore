@@ -1,2 +1,2 @@
-# Cipherator
-A simple command line cipherator tool written in python
+# E-Drug_Store
+A simple command line server-client application in Python Flask
